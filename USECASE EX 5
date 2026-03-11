@@ -1,0 +1,26 @@
+import numpy as np
+
+# Data (Free, Win, Offer) → Spam(1)/NotSpam(0)
+X = np.array([[1,1,1],[1,0,1],[0,1,0],[0,0,1],[0,0,0],[1,0,0]])
+y = np.array([1,1,1,0,0,0])
+
+# Priors
+P1 = np.mean(y)
+P0 = 1 - P1
+
+# Mean & Variance
+m1, v1 = X[y==1].mean(0), X[y==1].var(0)
+m0, v0 = X[y==0].mean(0), X[y==0].var(0)
+
+g = lambda x,m,v: np.exp(-(x-m)**2/(2*v+1e-6))/np.sqrt(2*np.pi*v+1e-6)
+
+# New Email: Free=1, Win=1, Offer=0
+new = np.array([1,1,0])
+
+p1 = P1 * np.prod(g(new,m1,v1))
+p0 = P0 * np.prod(g(new,m0,v0))
+
+print("Prediction:", "Spam" if p1>p0 else "Not Spam")
+
+OUTPUT:
+Prediction: Spam

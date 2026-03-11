@@ -1,0 +1,32 @@
+#ex 8 testcase
+# Small KNN example: Student Result Prediction
+
+from sklearn.neighbors import KNeighborsClassifier
+
+# Training data: [Study Hours, Attendance (%)]
+X_train = [
+    [2, 30],  # S1
+    [3, 35],  # S2
+    [5, 60],  # S3
+    [6, 65],  # S4
+    [8, 80],  # S5
+    [1, 25]   # S6
+]
+
+# Labels: 0=Fail, 1=Pass
+y_train = [0, 0, 1, 1, 1, 0]
+
+# Create KNN classifier with 3 neighbors
+knn = KNeighborsClassifier(n_neighbors=3)
+knn.fit(X_train, y_train)
+
+# Predict a new student
+new_student = [[4, 50]]  # Study 4 hours, 50% attendance
+prediction = knn.predict(new_student)
+
+# Output result
+result = "Pass" if prediction[0] == 1 else "Fail"
+print("Prediction for student (Study Hours=4, Attendance=50%):", result)
+
+OUTPUT:
+Prediction for student (Study Hours=4, Attendance=50%): Pass

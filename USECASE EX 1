@@ -1,0 +1,124 @@
+# -------------------------------------------------------
+# Candidate Elimination Algorithm
+# Use Case: Medical Diagnosis
+# -------------------------------------------------------
+
+import copy
+
+# -------------------------------------------------------
+# Step 1: Training Data
+# -------------------------------------------------------
+
+data = [
+    ['High', 'Yes', 'Yes', 'Yes'],
+    ['High', 'Yes', 'No',  'Yes'],
+    ['Normal', 'Yes', 'Yes', 'No'],
+    ['High', 'No',  'Yes', 'Yes']
+]
+
+attributes = ['Fever', 'Cough', 'Fatigue']
+
+# -------------------------------------------------------
+# Step 2: Initialize S and G
+# -------------------------------------------------------
+
+# Most Specific Hypothesis
+S = ['Ø', 'Ø', 'Ø']
+
+# Most General Hypothesis
+G = [['?', '?', '?']]
+
+# -------------------------------------------------------
+# Helper Functions
+# -------------------------------------------------------
+
+def is_consistent(hypothesis, example):
+    for i in range(len(hypothesis)):
+        if hypothesis[i] != '?' and hypothesis[i] != example[i]:
+            return False
+    return True
+
+
+def generalize_S(example):
+    global S
+    for i in range(len(S)):
+        if S[i] == 'Ø':
+            S[i] = example[i]
+        elif S[i] != example[i]:
+            S[i] = '?'
+
+
+def specialize_G(example):
+    global G
+    new_G = []
+    for hypothesis in G:
+        if is_consistent(hypothesis, example):
+            for i in range(len(hypothesis)):
+                if hypothesis[i] == '?':
+                    if example[i] == 'High':
+                        new_h = hypothesis.copy()
+                        new_h[i] = 'Normal'
+                        new_G.append(new_h)
+                    elif example[i] == 'Normal':
+                        new_h = hypothesis.copy()
+                        new_h[i] = 'High'
+                        new_G.append(new_h)
+                    elif example[i] == 'Yes':
+                        new_h = hypothesis.copy()
+                        new_h[i] = 'No'
+                        new_G.append(new_h)
+                    elif example[i] == 'No':
+                        new_h = hypothesis.copy()
+                        new_h[i] = 'Yes'
+                        new_G.append(new_h)
+        else:
+            new_G.append(hypothesis)
+
+    G = new_G
+
+# -------------------------------------------------------
+# Step 3: Training
+# -------------------------------------------------------
+
+for example in data:
+    features = example[:-1]
+    label = example[-1]
+
+    if label == 'Yes':  # Positive Example
+        if S == ['Ø', 'Ø', 'Ø']:
+            S = features.copy()
+        else:
+            generalize_S(features)
+
+        G = [g for g in G if is_consistent(g, features)]
+
+    else:  # Negative Example
+        specialize_G(features)
+
+    print("S:", S)
+    print("G:", G)
+    print("-----------------------------")
+
+# -------------------------------------------------------
+# Final Hypotheses
+# -------------------------------------------------------
+
+print("\nFinal Most Specific Hypothesis (S):", S)
+print("Final Most General Hypothesis (G):", G)
+
+OUTPUT:
+S: ['High', 'Yes', 'Yes']
+G: [['?', '?', '?']]
+-----------------------------
+S: ['High', 'Yes', '?']
+G: [['?', '?', '?']]
+-----------------------------
+S: ['High', 'Yes', '?']
+G: [['High', '?', '?'], ['?', 'No', '?'], ['?', '?', 'No']]
+-----------------------------
+S: ['High', '?', '?']
+G: [['High', '?', '?'], ['?', 'No', '?']]
+-----------------------------
+
+Final Most Specific Hypothesis (S): ['High', '?', '?']
+Final Most General Hypothesis (G): [['High', '?', '?'], ['?', 'No', '?']]

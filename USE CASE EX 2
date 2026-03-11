@@ -1,0 +1,114 @@
+# -------------------------------------------------------
+# ID3 Algorithm Implementation
+# Use Case: Medical Diagnosis
+# -------------------------------------------------------
+
+import pandas as pd
+import math
+
+# -------------------------------------------------------
+# Step 1: Create Dataset
+# -------------------------------------------------------
+
+data = pd.DataFrame({
+    'Fever':   ['High','High','Normal','Low','High','Normal','Low','High'],
+    'Cough':   ['Yes','Yes','Yes','No','No','Yes','No','Yes'],
+    'Fatigue': ['Yes','No','Yes','No','Yes','No','No','Yes'],
+    'Age':     ['Old','Young','Old','Young','Old','Young','Young','Old'],
+    'Disease': ['Yes','Yes','Yes','No','Yes','No','No','Yes']
+})
+
+# -------------------------------------------------------
+# Step 2: Calculate Entropy
+# -------------------------------------------------------
+
+def entropy(target_column):
+    values = target_column.value_counts()
+    total = len(target_column)
+    ent = 0
+    for count in values:
+        probability = count / total
+        ent -= probability * math.log2(probability)
+    return ent
+
+# -------------------------------------------------------
+# Step 3: Calculate Information Gain
+# -------------------------------------------------------
+
+def information_gain(data, attribute, target="Disease"):
+    total_entropy = entropy(data[target])
+    values = data[attribute].unique()
+    weighted_entropy = 0
+    
+    for value in values:
+        subset = data[data[attribute] == value]
+        weight = len(subset) / len(data)
+        weighted_entropy += weight * entropy(subset[target])
+    
+    gain = total_entropy - weighted_entropy
+    return gain
+
+# -------------------------------------------------------
+# Step 4: ID3 Algorithm
+# -------------------------------------------------------
+
+def id3(data, attributes, target="Disease"):
+    
+    # If all examples are positive
+    if len(data[target].unique()) == 1:
+        return data[target].iloc[0]
+    
+    # If no attributes left
+    if len(attributes) == 0:
+        return data[target].mode()[0]
+    
+    # Compute Information Gain
+    gains = [information_gain(data, attr, target) for attr in attributes]
+    best_attribute = attributes[gains.index(max(gains))]
+    
+    print("Information Gain:")
+    for attr in attributes:
+        print(attr, ":", round(information_gain(data, attr), 4))
+    print("Best Attribute Chosen:", best_attribute)
+    print("-----------------------------------")
+    
+    tree = {best_attribute: {}}
+    
+    for value in data[best_attribute].unique():
+        subset = data[data[best_attribute] == value]
+        
+        if subset.empty:
+            tree[best_attribute][value] = data[target].mode()[0]
+        else:
+            remaining_attributes = [attr for attr in attributes if attr != best_attribute]
+            tree[best_attribute][value] = id3(subset, remaining_attributes, target)
+    
+    return tree
+
+# -------------------------------------------------------
+# Step 5: Build Decision Tree
+# -------------------------------------------------------
+
+attributes = ['Fever', 'Cough', 'Fatigue', 'Age']
+decision_tree = id3(data, attributes)
+
+print("\nFinal Decision Tree:")
+print(decision_tree)
+
+OUTPUT:
+Information Gain:
+Fever : 0.7044
+Cough : 0.1589
+Fatigue : 0.5488
+Age : 0.5488
+Best Attribute Chosen: Fever
+-----------------------------------
+Information Gain:
+Cough : 0.0
+Fatigue : 1.0
+Age : 1.0
+Best Attribute Chosen: Fatigue
+-----------------------------------
+
+Final Decision Tree:
+{'Fever': {'High': 'Yes', 'Normal': {'Fatigue': {'Yes': 'Yes', 'No': 'No'}}, 'Low': 'No'}}

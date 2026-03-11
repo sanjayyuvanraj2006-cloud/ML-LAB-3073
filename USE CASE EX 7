@@ -1,0 +1,36 @@
+#test case 7 
+import numpy as np
+
+heads = np.array([5, 9, 8, 4, 7])
+n = 10
+
+theta_A = 0.6
+theta_B = 0.5
+
+for i in range(10):
+
+    weight_A = []
+    weight_B = []
+
+    for h in heads:
+        prob_A = (theta_A**h) * ((1-theta_A)**(n-h))
+        prob_B = (theta_B**h) * ((1-theta_B)**(n-h))
+
+        wA = prob_A / (prob_A + prob_B)
+        wB = prob_B / (prob_A + prob_B)
+
+        weight_A.append(wA)
+        weight_B.append(wB)
+
+    weight_A = np.array(weight_A)
+    weight_B = np.array(weight_B)
+
+    theta_A = np.sum(weight_A * heads) / (np.sum(weight_A) * n)
+    theta_B = np.sum(weight_B * heads) / (np.sum(weight_B) * n)
+
+print("Coin A probability =", round(theta_A, 4))
+print("Coin B probability =", round(theta_B, 4))
+
+OUTPUT:
+Coin A probability = 0.7967
+Coin B probability = 0.5197

@@ -1,0 +1,105 @@
+# Import required libraries
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+
+# -------------------------------
+# Create Dataset
+# -------------------------------
+
+data = {
+    "size": [800, 1000, 1200, 1500, 1800, 2000],
+    "price": [20, 25, 30, 38, 45, 50]
+}
+
+df = pd.DataFrame(data)
+
+size = np.array(df["size"])
+price = np.array(df["price"])
+
+
+# -------------------------------
+# Kernel Function
+# -------------------------------
+
+def kernel(point, X, k):
+   
+    m = X.shape[0]
+    weights = np.eye(m)
+   
+    for j in range(m):
+        diff = point - X[j]
+        weights[j, j] = np.exp(-(diff @ diff) / (2 * k * k))
+       
+    return weights
+
+
+# -------------------------------
+# Local Weight Calculation
+# -------------------------------
+
+def local_weight(point, X, y, k):
+   
+    W = kernel(point, X, k)
+   
+    theta = np.linalg.pinv(X.T @ W @ X) @ (X.T @ W @ y)
+   
+    return theta
+
+
+# -------------------------------
+# Local Weighted Regression
+# -------------------------------
+
+def local_weight_regression(X, y, k):
+   
+    m = X.shape[0]
+    y_pred = np.zeros(m)
+   
+    for i in range(m):
+        theta = local_weight(X[i], X, y, k)
+        y_pred[i] = X[i] @ theta
+       
+    return y_pred
+
+
+# -------------------------------
+# Prepare Data Matrix
+# -------------------------------
+
+X = np.column_stack((np.ones(len(size)), size))
+y = price
+
+
+# -------------------------------
+# Run Prediction
+# -------------------------------
+
+k = 400   # bandwidth parameter
+y_pred = local_weight_regression(X, y, k)
+
+
+# Sort values for smooth plotting
+sorted_index = X[:,1].argsort()
+
+X_sorted = X[sorted_index]
+y_pred_sorted = y_pred[sorted_index]
+
+
+# -------------------------------
+# Plot Graph
+# -------------------------------
+
+plt.scatter(size, price, color="green", label="Actual Prices")
+
+plt.plot(X_sorted[:,1], y_pred_sorted,
+         color="red",
+         linewidth=3,
+         label="Predicted Price (LWR)")
+
+plt.xlabel("House Size (sqft)")
+plt.ylabel("House Price")
+plt.title("House Price Prediction using Locally Weighted Regression")
+
+plt.legend(

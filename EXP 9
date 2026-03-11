@@ -1,0 +1,66 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Kernel function
+def kernel(point, X, k):
+    m, n = X.shape
+    weights = np.eye(m)
+
+    for j in range(m):
+        diff = point - X[j]
+        weights[j, j] = np.exp(-(diff @ diff) / (2 * k**2))
+
+    return weights
+
+
+# Local weight calculation
+def local_weight(point, X, y, k):
+    W = kernel(point, X, k)
+
+    # Using pseudo inverse to avoid singular matrix error
+    theta = np.linalg.pinv(X.T @ W @ X) @ (X.T @ W @ y)
+
+    return theta
+
+
+# Locally weighted regression
+def local_weight_regression(X, y, k):
+    m = X.shape[0]
+    y_pred = np.zeros(m)
+
+    for i in range(m):
+        theta = local_weight(X[i], X, y, k)
+        y_pred[i] = X[i] @ theta
+
+    return y_pred
+
+
+# Load dataset
+data = pd.read_csv("dataset.csv")
+
+bill = data["total_bill"].values
+tip = data["tip"].values
+
+# Prepare matrix
+X = np.column_stack((np.ones(len(bill)), bill))
+y = tip
+
+# Run regression
+y_pred = local_weight_regression(X, y, 1)
+
+# Sort for smooth curve
+sorted_index = X[:,1].argsort()
+X_sorted = X[sorted_index]
+y_pred_sorted = y_pred[sorted_index]
+
+# Plot
+plt.scatter(bill, tip, color="green", label="Data Points")
+plt.plot(X_sorted[:,1], y_pred_sorted, color="red", linewidth=3, label="LWR Curve")
+
+plt.xlabel("Total Bill")
+plt.ylabel("Tip")
+plt.title("Locally Weighted Regression")
+plt.legend()
+
+plt.show()
